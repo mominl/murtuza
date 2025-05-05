@@ -1,95 +1,63 @@
-def solve_n_queens(n):
-    """
-    Solves the N-Queens problem and returns all solutions.
-    
-    Args:
-        n: The size of the board and number of queens
-    
-    Returns:
-        A list of solutions, each solution is a list of column positions for each row
-    """
-    def is_safe(board, row, col):
-        # Check if a queen can be placed at board[row][col]
-        
-        # Check this row on left side
-        for i in range(col):
-            if board[row][i] == 1:
-                return False
-        
-        # Check upper diagonal on left side
-        for i, j in zip(range(row, -1, -1), range(col, -1, -1)):
-            if board[i][j] == 1:
-                return False
-        
-        # Check lower diagonal on left side
-        for i, j in zip(range(row, n, 1), range(col, -1, -1)):
-            if board[i][j] == 1:
-                return False
-        
-        return True
-    
-    def solve_util(board, col):
-        # Base case: If all queens are placed
-        if col >= n:
-            # Add the solution
+class Nqueens:
+    def __init__(self, n):
+        # Initialize the board and helper variables
+        self.n = n  # Size of the board (n x n)
+        self.board = [-1]*self.n  # Store queen positions, index is row, value is column
+        self.solutions = []  # To store all valid solutions
+        self.columns = set()  # Columns where queens are already placed
+        self.positive_diagonals = set()  # (row + col) diagonals
+        self.negative_diagonals = set()  # (row - col) diagonals
+
+    def solve(self):
+        # Start solving from row 0
+        self.backtrack(0)
+        return self.solutions
+
+    def backtrack(self, row):
+        # Base case: if all rows are filled, we found a solution
+        if row == self.n:
             solution = []
-            for i in range(n):
-                for j in range(n):
-                    if board[i][j] == 1:
-                        solution.append(j)
-            solutions.append(solution)
-            return True
-        
-        # Try placing queen in all rows of this column
-        res = False
-        for i in range(n):
-            if is_safe(board, i, col):
-                # Place the queen
-                board[i][col] = 1
-                
-                # Recur to place rest of the queens
-                res = solve_util(board, col + 1) or res
-                
-                # Backtrack
-                board[i][col] = 0
-        
-        return res
-    
-    # Create an empty n x n board
-    board = [[0 for _ in range(n)] for _ in range(n)]
-    solutions = []
-    
-    # Solve the problem
-    solve_util(board, 0)
-    
-    return solutions
+            for i in range(self.n):
+                line = ['_ ']*self.n  # Start with all empty positions
+                line[self.board[i]] = 'Q '  # Place queen at the correct column
+                solution.append(''.join(line))  # Add formatted row to solution
+            self.solutions.append(solution)  # Save the solution
+            return  # Important to return after finding a solution
 
-def print_board(solution, n):
-    """
-    Prints a visual representation of a solution.
-    
-    Args:
-        solution: A list of column positions
-        n: The size of the board
-    """
-    board = [['.' for _ in range(n)] for _ in range(n)]
-    for row, col in enumerate(solution):
-        board[row][col] = 'Q'
-    
-    for row in board:
-        print(' '.join(row))
-    print()
+        # Try placing a queen in each column of the current row
+        for col in range(self.n):
+            # Skip if the column or diagonals are under attack
+            if col in self.columns or row+col in self.positive_diagonals or row-col in self.negative_diagonals:
+                continue
 
+            # Place queen
+            self.board[row] = col
+            self.columns.add(col)
+            self.positive_diagonals.add(row+col)
+            self.negative_diagonals.add(row-col)
+
+            # Recurse to next row
+            self.backtrack(row+1)
+
+            # Backtrack: remove queen and reset state
+            self.columns.remove(col)
+            self.positive_diagonals.remove(row+col)
+            self.negative_diagonals.remove(row-col)
+
+def main():
+    # Set the number of queens explicitly (avoid using input() in restricted environments)
+    N = 4  # Change this value to try different board sizes
+    n_queens = Nqueens(N)
+    solutions = n_queens.solve()  # Solve the problem
+
+    # Print the results
+    print(f"Total number of solutions for {N}-Queens: {len(solutions)}")
+    for idx, solution in enumerate(solutions, 1):
+        print(f"Solution {idx}:")
+        for row in solution:
+            print(row)
+        print()
+
+# Run the main function if this file is executed
 if __name__ == "__main__":
-    n = int(input("Enter the board size (N): "))
-    solutions = solve_n_queens(n)
-    
-    print(f"Found {len(solutions)} solutions for {n}-Queens problem.")
-    
-    # Print first few solutions
-    for i, solution in enumerate(solutions[:3]):
-        print(f"Solution {i+1}:")
-        print_board(solution, n)
-        
-    if len(solutions) > 3:
-        print(f"... and {len(solutions) - 3} more solutions.")
+    main()
